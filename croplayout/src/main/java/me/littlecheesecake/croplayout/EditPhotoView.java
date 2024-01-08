@@ -118,6 +118,27 @@ public class EditPhotoView extends FrameLayout {
         shadowColor = ta.getColor(R.styleable.CropLayout_crop_shadow_color, Color.parseColor("#aa111111"));
     }
 
+    public void setCanResizeBox(boolean value) {
+        selectionView.setCanResizeBox(value);
+    }
+
+    public void setCropCornerColor(int value) {
+        cornerColor = value;
+    }
+
+    public void setCropDotColor(int value) {
+        dotColor = value;
+    }
+
+    public void setCropLineColor(int value) {
+        lineColor = value;
+    }
+
+    public void setCropShadowColor(int value) {
+        shadowColor = value;
+    }
+
+
     protected int dp2px(float dp) {
         final float scale = context.getResources().getDisplayMetrics().density;
         return (int) (dp * scale + 0.5f);

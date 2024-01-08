@@ -25,6 +25,7 @@ public class SelectionView extends View implements View.OnTouchListener {
 
     private OnBoxChangedListener onBoxChangedListener;
     private EditableImage editableImage;
+    private boolean canResizeBox;
 
     private int bitmapWidth;
     private int bitmapHeight;
@@ -79,6 +80,10 @@ public class SelectionView extends View implements View.OnTouchListener {
 
         offset = lineWidth / 4;
         offset_2 = lineWidth;
+    }
+
+    public void setCanResizeBox(boolean value) {
+        canResizeBox = value;
     }
 
     public void resetBoxSize(int bitmapWidth, int bitmapHeight) {
@@ -310,103 +315,105 @@ public class SelectionView extends View implements View.OnTouchListener {
 
     @Override
     public boolean onTouch(View view, MotionEvent motionEvent) {
-        int[] loc = new int[2];
-        getLocationOnScreen(loc);
-        int curX = (int) motionEvent.getRawX();
-        int curY = (int) motionEvent.getRawY();
+        if (canResizeBox) {
+            int[] loc = new int[2];
+            getLocationOnScreen(loc);
+            int curX = (int) motionEvent.getRawX();
+            int curY = (int) motionEvent.getRawY();
 
 
-        if (animatingExpanding) {
-            return false;
-        }
+            if (animatingExpanding) {
+                return false;
+            }
 
-        // or box scaling and moving
-        int activeIdx = editableImage.getActiveBoxIdx();
-        if (activeIdx < 0) {
-            return false;
-        }
+            // or box scaling and moving
+            int activeIdx = editableImage.getActiveBoxIdx();
+            if (activeIdx < 0) {
+                return false;
+            }
 
-        switch (motionEvent.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-                prevX = curX;
-                prevY = curY;
+            switch (motionEvent.getAction()) {
+                case MotionEvent.ACTION_DOWN:
+                    prevX = curX;
+                    prevY = curY;
 
-                prevBoxX1 = editableImage.getActiveBox().getX1();
-                prevBoxX2 = editableImage.getActiveBox().getX2();
-                prevBoxY1 = editableImage.getActiveBox().getY1();
-                prevBoxY2 = editableImage.getActiveBox().getY2();
+                    prevBoxX1 = editableImage.getActiveBox().getX1();
+                    prevBoxX2 = editableImage.getActiveBox().getX2();
+                    prevBoxY1 = editableImage.getActiveBox().getY1();
+                    prevBoxY2 = editableImage.getActiveBox().getY2();
 
-                return true;
+                    return true;
 
-            case MotionEvent.ACTION_MOVE:
-                int diffX = curX - prevX;
-                int diffY = curY - prevY;
+                case MotionEvent.ACTION_MOVE:
+                    int diffX = curX - prevX;
+                    int diffY = curY - prevY;
 
-                displayBoxes.get(activeIdx).resizeBox(curX - loc[0], curY - loc[1], diffX, diffY,
-                        (getWidth() - bitmapWidth) / 2,
-                        (getHeight() - bitmapHeight) / 2,
-                        (getWidth() + bitmapWidth) / 2,
-                        (getHeight() + bitmapHeight) / 2,
-                        (int) cornerLength);
-                updateOriginalBox();
+                    displayBoxes.get(activeIdx).resizeBox(curX - loc[0], curY - loc[1], diffX, diffY,
+                            (getWidth() - bitmapWidth) / 2,
+                            (getHeight() - bitmapHeight) / 2,
+                            (getWidth() + bitmapWidth) / 2,
+                            (getHeight() + bitmapHeight) / 2,
+                            (int) cornerLength);
+                    updateOriginalBox();
 
 
-                invalidate();
+                    invalidate();
 
-                prevX = curX;
-                prevY = curY;
-                return true;
+                    prevX = curX;
+                    prevY = curY;
+                    return true;
 
-            case MotionEvent.ACTION_UP:
-                // check click on dot
-                for (ScalableBox dot : displayBoxes) {
-                    if (displayBoxes.indexOf(dot) != editableImage.getActiveBoxIdx()) {
-                        int buffer = 25;
-                        int x1 = dot.getX1();
-                        int x2 = dot.getX2();
-                        int y1 = dot.getY1();
-                        int y2 = dot.getY2();
-                        int dotX = (x1 + x2) / 2;
-                        int dotY = (y1 + y2) / 2;
-                        int pointX = curX - loc[0];
-                        int pointY = curY - loc[1];
+                case MotionEvent.ACTION_UP:
+                    // check click on dot
+                    for (ScalableBox dot : displayBoxes) {
+                        if (displayBoxes.indexOf(dot) != editableImage.getActiveBoxIdx()) {
+                            int buffer = 25;
+                            int x1 = dot.getX1();
+                            int x2 = dot.getX2();
+                            int y1 = dot.getY1();
+                            int y2 = dot.getY2();
+                            int dotX = (x1 + x2) / 2;
+                            int dotY = (y1 + y2) / 2;
+                            int pointX = curX - loc[0];
+                            int pointY = curY - loc[1];
 
-                        if ((dotX - buffer <= pointX) && (pointX <= dotX + buffer) &&
-                                (dotY - buffer <= pointY) && (pointY <= dotY + buffer)
-                                ) {
+                            if ((dotX - buffer <= pointX) && (pointX <= dotX + buffer) &&
+                                    (dotY - buffer <= pointY) && (pointY <= dotY + buffer)
+                            ) {
 
-                            // expand the box
-                            setUpExpanding(dotX, dotY, dot);
-                            editableImage.setActiveBoxIdx(displayBoxes.indexOf(dot));
-                            invalidate();
+                                // expand the box
+                                setUpExpanding(dotX, dotY, dot);
+                                editableImage.setActiveBoxIdx(displayBoxes.indexOf(dot));
+                                invalidate();
 
-                            if (onBoxChangedListener != null) {
-                                onBoxChangedListener.onChanged(
-                                        editableImage.getActiveBox().getX1(),
-                                        editableImage.getActiveBox().getY1(),
-                                        editableImage.getActiveBox().getX2(),
-                                        editableImage.getActiveBox().getY2());
+                                if (onBoxChangedListener != null) {
+                                    onBoxChangedListener.onChanged(
+                                            editableImage.getActiveBox().getX1(),
+                                            editableImage.getActiveBox().getY1(),
+                                            editableImage.getActiveBox().getX2(),
+                                            editableImage.getActiveBox().getY2());
+                                }
+                                // reset the display box
+                                setDisplayBoxes(editableImage.getBoxes());
+                                return false;
                             }
-                            // reset the display box
-                            setDisplayBoxes(editableImage.getBoxes());
-                            return false;
                         }
                     }
-                }
 
-                ScalableBox originalBox = editableImage.getActiveBox();
-                if (onBoxChangedListener != null
-                        && (prevBoxX1 != originalBox.getX1()
-                        || prevBoxX2 != originalBox.getX2()
-                        || prevBoxY1 != originalBox.getY1()
-                        || prevBoxY2 != originalBox.getY2())) {
-                    onBoxChangedListener.onChanged(originalBox.getX1(), originalBox.getY1(), originalBox.getX2(), originalBox.getY2());
-                }
+                    ScalableBox originalBox = editableImage.getActiveBox();
+                    if (onBoxChangedListener != null
+                            && (prevBoxX1 != originalBox.getX1()
+                            || prevBoxX2 != originalBox.getX2()
+                            || prevBoxY1 != originalBox.getY1()
+                            || prevBoxY2 != originalBox.getY2())) {
+                        onBoxChangedListener.onChanged(originalBox.getX1(), originalBox.getY1(), originalBox.getX2(), originalBox.getY2());
+                    }
 
-                prevBoxX1 = originalBox.getX1();
-                prevBoxX2 = originalBox.getX2();
-                prevBoxY1 = originalBox.getY1();
-                prevBoxY2 = originalBox.getY2();
+                    prevBoxX1 = originalBox.getX1();
+                    prevBoxX2 = originalBox.getX2();
+                    prevBoxY1 = originalBox.getY1();
+                    prevBoxY2 = originalBox.getY2();
+            }
         }
         return false;
     }
