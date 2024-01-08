@@ -122,22 +122,15 @@ public class EditPhotoView extends FrameLayout {
         selectionView.setCanResizeBox(value);
     }
 
-    public void setCropCornerColor(int value) {
-        cornerColor = value;
+    public void setAttributes(int lineColor, int dotColor, int cornerColor, int shadowColor) {
+        this.lineColor = lineColor;
+        this.dotColor = dotColor;
+        this.cornerColor = cornerColor;
+        this.shadowColor = shadowColor;
+        cornerWidth = dp2px(LINE_WIDTH * 2);
+        cornerLength = dp2px(CORNER_LENGTH);
+        lineWidth = dp2px(LINE_WIDTH);
     }
-
-    public void setCropDotColor(int value) {
-        dotColor = value;
-    }
-
-    public void setCropLineColor(int value) {
-        lineColor = value;
-    }
-
-    public void setCropShadowColor(int value) {
-        shadowColor = value;
-    }
-
 
     protected int dp2px(float dp) {
         final float scale = context.getResources().getDisplayMetrics().density;
